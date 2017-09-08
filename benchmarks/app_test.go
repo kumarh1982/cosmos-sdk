@@ -21,7 +21,7 @@ import (
 )
 
 type BenchApp struct {
-	App      *app.Basecoin
+	App      app.Basecoin
 	Accounts []*coin.AccountWithKey
 	ChainID  string
 }

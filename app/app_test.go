@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 	"github.com/cosmos/cosmos-sdk/modules/base"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/roles"
 	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
+	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tmlibs/log"
 )
@@ -55,7 +55,7 @@ func DefaultHandler(feeDenom string) sdk.Handler {
 type appTest struct {
 	t       *testing.T
 	chainID string
-	app     *Basecoin
+	app     Basecoin
 	acctIn  *coin.AccountWithKey
 	acctOut *coin.AccountWithKey
 }

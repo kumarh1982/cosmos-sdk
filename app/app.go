@@ -24,52 +24,23 @@ const (
 
 // Basecoin - The ABCI application
 type Basecoin struct {
-	info  *sm.ChainState
-	state *Store
-
+	*IAVLApp
 	handler sdk.Handler
-
-	pending []*abci.Validator
-	height  uint64
-	logger  log.Logger
 }
 
 var _ abci.Application = &Basecoin{}
 
 // NewBasecoin - create a new instance of the basecoin application
-func NewBasecoin(handler sdk.Handler, store *Store, logger log.Logger) *Basecoin {
-	return &Basecoin{
+func NewBasecoin(handler sdk.Handler, store *Store, logger log.Logger) Basecoin {
+	return Basecoin{
 		handler: handler,
-		info:    sm.NewChainState(),
-		state:   store,
-		logger:  logger,
-	}
-}
-
-// GetChainID returns the currently stored chain
-func (app *Basecoin) GetChainID() string {
-	return app.info.GetChainID(app.state.Committed())
-}
-
-// GetState is back... please kill me
-func (app *Basecoin) GetState() sm.SimpleDB {
-	return app.state.Append()
-}
-
-// Info - ABCI
-func (app *Basecoin) Info() abci.ResponseInfo {
-	resp := app.state.Info()
-	app.height = resp.LastBlockHeight
-	return abci.ResponseInfo{
-		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
-		LastBlockHeight:  resp.LastBlockHeight,
-		LastBlockAppHash: resp.LastBlockAppHash,
+		IAVLApp: NewIAVLApp(store, logger),
 	}
 }
 
 // InitState - used to setup state (was SetOption)
 // to be used by InitChain later
-func (app *Basecoin) InitState(key string, value string) string {
+func (app Basecoin) InitState(key string, value string) string {
 
 	module, key := splitKey(key)
 	state := app.state.Append()
@@ -89,13 +60,8 @@ func (app *Basecoin) InitState(key string, value string) string {
 	return "Error: " + err.Error()
 }
 
-// SetOption - ABCI
-func (app *Basecoin) SetOption(key string, value string) string {
-	return "Not Implemented"
-}
-
 // DeliverTx - ABCI
-func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
+func (app Basecoin) DeliverTx(txBytes []byte) abci.Result {
 	tx, err := sdk.LoadTx(txBytes)
 	if err != nil {
 		return errors.Result(err)
@@ -116,7 +82,7 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 }
 
 // CheckTx - ABCI
-func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
+func (app Basecoin) CheckTx(txBytes []byte) abci.Result {
 	tx, err := sdk.LoadTx(txBytes)
 	if err != nil {
 		return errors.Result(err)
@@ -135,8 +101,54 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	return sdk.ToABCI(res)
 }
 
+// IAVLApp is a generic app backed by an IAVL tree
+// You can embed it and add your own DeliverTx/CheckTx logic
+type IAVLApp struct {
+	info  *sm.ChainState
+	state *Store
+
+	pending []*abci.Validator
+	height  uint64
+	logger  log.Logger
+}
+
+// NewIAVLApp creates an instance of an IAVLApp
+func NewIAVLApp(store *Store, logger log.Logger) *IAVLApp {
+	return &IAVLApp{
+		info:   sm.NewChainState(),
+		state:  store,
+		logger: logger,
+	}
+}
+
+// GetChainID returns the currently stored chain
+func (app *IAVLApp) GetChainID() string {
+	return app.info.GetChainID(app.state.Committed())
+}
+
+// GetState is back... please kill me
+func (app *IAVLApp) GetState() sm.SimpleDB {
+	return app.state.Append()
+}
+
+// Info - ABCI
+func (app *IAVLApp) Info() abci.ResponseInfo {
+	resp := app.state.Info()
+	app.height = resp.LastBlockHeight
+	return abci.ResponseInfo{
+		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
+		LastBlockHeight:  resp.LastBlockHeight,
+		LastBlockAppHash: resp.LastBlockAppHash,
+	}
+}
+
+// SetOption - ABCI
+func (app *IAVLApp) SetOption(key string, value string) string {
+	return "Not Implemented"
+}
+
 // Query - ABCI
-func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
+func (app *IAVLApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
 	if len(reqQuery.Data) == 0 {
 		resQuery.Log = "Query cannot be zero length"
 		resQuery.Code = abci.CodeType_EncodingError
@@ -147,7 +159,7 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 }
 
 // Commit - ABCI
-func (app *Basecoin) Commit() (res abci.Result) {
+func (app *IAVLApp) Commit() (res abci.Result) {
 	// Commit state
 	res = app.state.Commit()
 	if res.IsErr() {
@@ -157,30 +169,25 @@ func (app *Basecoin) Commit() (res abci.Result) {
 }
 
 // InitChain - ABCI
-func (app *Basecoin) InitChain(validators []*abci.Validator) {
-	// for _, plugin := range app.plugins.GetList() {
-	// 	plugin.InitChain(app.state, validators)
-	// }
+func (app *IAVLApp) InitChain(validators []*abci.Validator) {
 }
 
 // BeginBlock - ABCI
-func (app *Basecoin) BeginBlock(hash []byte, header *abci.Header) {
+func (app *IAVLApp) BeginBlock(hash []byte, header *abci.Header) {
 	app.height++
-	// for _, plugin := range app.plugins.GetList() {
-	// 	plugin.BeginBlock(app.state, hash, header)
-	// }
+	// TODO: trigger ticks on modules
 }
 
 // EndBlock - ABCI
 // Returns a list of all validator changes made in this block
-func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
+func (app *IAVLApp) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	// TODO: cleanup in case a validator exists multiple times in the list
 	res.Diffs = app.pending
 	app.pending = nil
 	return
 }
 
-func (app *Basecoin) addValChange(diffs []*abci.Validator) {
+func (app *IAVLApp) addValChange(diffs []*abci.Validator) {
 	for _, d := range diffs {
 		idx := pubKeyIndex(d, app.pending)
 		if idx >= 0 {

@@ -93,7 +93,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	return startTendermint(rootDir, basecoinApp)
 }
 
-func startBasecoinABCI(basecoinApp *app.Basecoin) error {
+func startBasecoinABCI(basecoinApp app.Basecoin) error {
 	// Start the ABCI listener
 	addr := viper.GetString(FlagAddress)
 	svr, err := server.NewServer(addr, "socket", basecoinApp)
@@ -111,7 +111,7 @@ func startBasecoinABCI(basecoinApp *app.Basecoin) error {
 	return nil
 }
 
-func startTendermint(dir string, basecoinApp *app.Basecoin) error {
+func startTendermint(dir string, basecoinApp app.Basecoin) error {
 	cfg, err := tcmd.ParseConfig()
 	if err != nil {
 		return err
