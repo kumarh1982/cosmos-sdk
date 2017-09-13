@@ -1,5 +1,5 @@
-hash: 647d25291b8e9a85cb4a49abc972a41537e8a286514bf41180845785e3b180a4
-updated: 2017-09-13T14:11:46.879460282+02:00
+hash: 22fb565a0fa39af427bc8864c3db4bd6edae699a7c1ad68b34755b6b1ce1c924
+updated: 2017-09-13T14:16:42.604702296+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -13,6 +13,10 @@ imports:
   version: b26d9c308763d68093482582cea63d69be07a0f0
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
+- name: github.com/ethanfrey/ledger
+  version: 5e432577be582bd18a3b4a9cd75dae7a317ade36
+- name: github.com/flynn/hid
+  version: ed06a31c6245d4552e8dbba7e32e5b010b875d65
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/go-kit/kit
@@ -119,13 +123,15 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 50e7c078170975532ca52004cb03a473afdebbff
+  version: ffd247ddc4c5a503bba04559734ec55d07a7b0e6
   subpackages:
+  - hd
   - keys
   - keys/cryptostore
   - keys/storage/filestorage
   - keys/storage/memstorage
   - keys/wordlist
+  - nano
 - name: github.com/tendermint/go-wire
   version: 5f88da3dbc1a72844e6dfaf274ce87f851d488eb
   subpackages:
